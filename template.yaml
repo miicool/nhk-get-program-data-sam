@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  NhkGetProgramdDataLambda
+
+Globals:
+  Function:
+    Timeout: 600
+
+Resources:
+  NhkGetProgramdDataLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Name: nhk-get-program-data-cron
+            Schedule: cron(1 15 * * ? *) # 0:01 JST
+
+    Metadata:
+      DockerTag: sambuild_latest
+      DockerContext: ./src/
+      Dockerfile: Dockerfile
+
+  # Lambda のログ用ロググループ
+  NhkGetProgramdDataLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${NhkGetProgramdDataLambda}
+      RetentionInDays: 30
+    
+
+Outputs:
+  customNhkGetProgramdDataLambda:
+    Description: "nhk-get-program-data Lambda Function ARN"
+    Value: !GetAtt NhkGetProgramdDataLambda.Arn
+  customNhkGetProgramdDataLambdaIamRole:
+    Description: "Implicit IAM Role created for NhkGetProgramdDataLambda function"
+    Value: !GetAtt NhkGetProgramdDataLambda.Arn
